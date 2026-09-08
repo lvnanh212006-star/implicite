@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trắc nghiệm Đạo hàm hàm ẩn</title>
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true
+            },
+            options: {
+                skipHtmlTypes: 'script',
+                processHtmlClass: 'math'
+            },
+            startup: {
+                typeset: true
+            }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" id="MathJax-script" async></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            background: #f4f7fc;
+            padding: 24px 16px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            align-items: center;
+        }
+        .app-container {
+            max-width: 850px;
+            width: 100%;
+            background: white;
+            border-radius: 32px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.1);
+            padding: 28px 24px;
+            position: relative;
+        }
+        h1 {
+            font-size: 28px;
+            font-weight: 600;
+            color: #0b2b4a;
+            border-left: 6px solid #2a7de1;
+            padding-left: 18px;
+            margin-bottom: 6px;
+        }
+        .subhead {
+            color: #3a5a7a;
+            margin-left: 24px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 12px;
+        }
+        .progress-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 0 4px;
+        }
+        .progress-text {
+            font-weight: 600;
+            color: #1f4973;
+            font-size: 16px;
+        }
+        .progress-dots {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .dot {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: #4a6a8a;
+            transition: 0.2s;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        .dot.active {
+            border-color: #2a7de1;
+            background: #d4e2fc;
+            color: #0b2b4a;
+        }
+        .dot.answered {
+            background: #8bc34a;
+            color: white;
+        }
+        .dot.correct-dot {
+            background: #4caf50;
+            color: white;
+        }
+        .dot.wrong-dot {
+            background: #f44336;
+            color: white;
+        }
+        .question-card {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 20px 22px;
+            margin-bottom: 20px;
+            border: 1px solid #e9edf4;
+            transition: 0.2s;
+            min-height: 280px;
+        }
+        .question-header {
+            display: flex;
+            align-items: baseline;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+        }
+        .q-number {
+            background: #eef3fa;
+            border-radius: 40px;
+            padding: 2px 16px;
+            font-weight: 600;
+            font-size: 15px;
+            color: #1f4973;
+        }
+        .q-tag {
+            font-size: 13px;
+            font-weight: 500;
+            background: #d4e2fc;
+            padding: 2px 14px;
+            border-radius: 40px;
+            color: #1a4b7a;
+        }
+        .q-text {
+            font-size: 18px;
+            font-weight: 500;
+            margin: 12px 0 18px 0;
+            line-height: 1.6;
+            color: #0b1e30;
+        }
+        .options-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin: 14px 0 10px;
+        }
+        .option-item {
+            background: #f8faff;
+            border: 1.5px solid #dce3ed;
+            border-radius: 60px;
+            padding: 12px 22px;
+            cursor: pointer;
+            transition: 0.15s ease;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .option-item:hover:not(.disabled-opt) {
+            background: #eef4fe;
+            border-color: #a0bbdf;
+        }
+        .option-item.correct {
+            background: #c8f0d0;
+            border-color: #1f9d4a;
+            color: #0a4623;
+        }
+        .option-item.wrong {
+            background: #fcd9d9;
+            border-color: #c73a3a;
+            color: #6d1a1a;
+        }
+        .option-item.disabled-opt {
+            cursor: default;
+            opacity: 0.9;
+        }
+        .option-prefix {
+            font-weight: 600;
+            color: #2f5077;
+            min-width: 28px;
+        }
+        .explanation-box {
+            margin-top: 18px;
+            padding: 18px 20px;
+            background: #f2f6fe;
+            border-radius: 18px;
+            border-left: 5px solid #2a7de1;
+            display: none;
+            font-size: 15px;
+            line-height: 1.8;
+            color: #103a5e;
+        }
+        .explanation-box.show {
+            display: block;
+        }
+        .exp-title {
+            font-weight: 600;
+            color: #134072;
+            margin-bottom: 6px;
+        }
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-top: 8px;
+        }
+        .nav-btn {
+            background: #eef3fa;
+            border: 1.5px solid #dce3ed;
+            padding: 10px 28px;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 15px;
+            color: #1f4973;
+            cursor: pointer;
+            transition: 0.2s;
+            min-width: 120px;
+        }
+        .nav-btn:hover:not(:disabled) {
+            background: #d4e2fc;
+            border-color: #2a7de1;
+        }
+        .nav-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        .nav-btn.primary {
+            background: #1e4f82;
+            border-color: #1e4f82;
+            color: white;
+        }
+        .nav-btn.primary:hover:not(:disabled) {
+            background: #0f3a62;
+        }
+        .footer-bar {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            background: #f0f5fe;
+            padding: 16px 22px;
+            border-radius: 60px;
+        }
+        .score-box {
+            font-weight: 600;
+            font-size: 18px;
+            color: #00337a;
+        }
+        .reset-btn {
+            background: #1e4f82;
+            border: none;
+            color: white;
+            font-weight: 600;
+            padding: 10px 32px;
+            border-radius: 60px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 4px 8px rgba(0, 40, 80, 0.2);
+            border: 1px solid #336caa;
+        }
+        .reset-btn:hover {
+            background: #0f3a62;
+            transform: scale(0.97);
+        }
+        .question-status {
+            font-size: 14px;
+            color: #4a6a8a;
+            font-weight: 500;
+        }
+        @media (max-width: 600px) {
+            .app-container { padding: 16px; }
+            .question-card { padding: 16px; }
+            .option-item { padding: 10px 16px; }
+            .q-text { font-size: 16px; }
+            .nav-btn { min-width: 80px; padding: 8px 16px; font-size: 13px; }
+            .progress-dots { gap: 4px; }
+            .dot { width: 24px; height: 24px; font-size: 10px; }
+        }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <h1>📐 Đạo hàm hàm ẩn</h1>
+    <div class="subhead">20 câu trắc nghiệm • 5 lý thuyết • 5 dễ • 5 trung bình • 5 khó</div>
+    
+    <div class="progress-bar">
+        <span class="progress-text" id="progressText">Câu 1 / 20</span>
+        <div class="progress-dots" id="progressDots"></div>
+    </div>
+
+    <div id="questionContainer"></div>
+
+    <div class="navigation">
+        <button class="nav-btn" id="prevBtn" disabled>◀ Trước</button>
+        <span class="question-status" id="questionStatus">Chưa trả lời</span>
+        <button class="nav-btn primary" id="nextBtn">Sau ▶</button>
+    </div>
+
+    <div class="footer-bar">
+        <span class="score-box" id="scoreDisplay">✅ 0 / 20</span>
+        <button class="reset-btn" id="resetBtn">⟳ Làm lại</button>
+    </div>
+</div>
+
+<script>
+    // Dữ liệu câu hỏi
+    const questionsData = [
+        { id: 1, type: 'Lý thuyết', difficulty: 'Lý thuyết', question: 'Cho hàm ẩn $y = f(x)$ xác định bởi $x^2 + y^2 = 1$. Đạo hàm $y\'$ bằng:', options: ['$-x/y$', '$x/y$', '$-y/x$', '$y/x$'], answer: 0, explanation: 'Đạo hàm hai vế: $2x + 2y \\cdot y\' = 0 \\Rightarrow y\' = -\\frac{x}{y}$' },
+        { id: 2, type: 'Lý thuyết', difficulty: 'Lý thuyết', question: 'Cho hàm ẩn $y(x)$ từ $e^{xy} = x+y$. Đạo hàm $y\'$ là:', options: ['$\\frac{1 - ye^{xy}}{xe^{xy} - 1}$', '$\\frac{1 + ye^{xy}}{xe^{xy} + 1}$', '$\\frac{ye^{xy} - 1}{1 - xe^{xy}}$', '$\\frac{xe^{xy} - 1}{1 - ye^{xy}}$'], answer: 0, explanation: 'Đạo hàm hai vế: $e^{xy}(y + x\\cdot y\') = 1 + y\' \\Rightarrow y\'(xe^{xy} - 1) = 1 - ye^{xy} \\Rightarrow y\' = \\frac{1 - ye^{xy}}{xe^{xy} - 1}$' },
+        { id: 3, type: 'Lý thuyết', difficulty: 'Lý thuyết', question: 'Với hàm ẩn $y(x)$ từ $\\ln(x^2 + y^2) = 2$, đạo hàm $y\'$ là:', options: ['$-x/y$', '$-y/x$', '$x/y$', '$y/x$'], answer: 0, explanation: 'Đạo hàm: $\\frac{2x + 2y\\cdot y\'}{x^2 + y^2} = 0 \\Rightarrow x + y\\cdot y\' = 0 \\Rightarrow y\' = -\\frac{x}{y}$' },
+        { id: 4, type: 'Lý thuyết', difficulty: 'Lý thuyết', question: 'Cho hàm ẩn $y = y(x)$ bởi $\\sin(xy) = x$. Giá trị $y\'$ tại $x=0$ là:', options: ['$1/y$', '$-1/y$', '$1/x$', '$0$'], answer: 0, explanation: 'Đạo hàm: $\\cos(xy)(y + x\\cdot y\') = 1$. Tại $x=0$, $\\cos(0)=1$, $y\' = \\frac{1}{y}$' },
+        { id: 5, type: 'Lý thuyết', difficulty: 'Lý thuyết', question: 'Hàm ẩn $y(x)$ được xác định bởi $x^3 + y^3 = 6xy$. Đạo hàm $y\'$ là:', options: ['$\\frac{2y - x^2}{y^2 - 2x}$', '$\\frac{x^2 - 2y}{y^2 - 2x}$', '$\\frac{2y - x^2}{2x - y^2}$', '$\\frac{x^2 - 2y}{2x - y^2}$'], answer: 0, explanation: 'Đạo hàm: $3x^2 + 3y^2\\cdot y\' = 6y + 6x\\cdot y\' \\Rightarrow (y^2 - 2x)y\' = 2y - x^2 \\Rightarrow y\' = \\frac{2y - x^2}{y^2 - 2x}$' },
+        { id: 6, type: 'Bài tập', difficulty: 'Dễ', question: 'Tìm $y\'$ của hàm ẩn $x^2 + y^2 = 25$ tại điểm $(3,4)$:', options: ['$-3/4$', '$3/4$', '$-4/3$', '$4/3$'], answer: 0, explanation: '$2x + 2y\\cdot y\' = 0 \\Rightarrow y\' = -\\frac{x}{y}$. Tại $(3,4)$: $y\' = -\\frac{3}{4}$' },
+        { id: 7, type: 'Bài tập', difficulty: 'Dễ', question: 'Cho $y$ là hàm ẩn từ $x^2 - y^2 = 1$. Tính $y\'$ tại $x=2, y=\\sqrt{3}$:', options: ['$2/\\sqrt{3}$', '$-2/\\sqrt{3}$', '$\\sqrt{3}/2$', '$-\\sqrt{3}/2$'], answer: 0, explanation: '$2x - 2y\\cdot y\' = 0 \\Rightarrow y\' = \\frac{x}{y}$. Tại $(2, \\sqrt{3})$: $y\' = \\frac{2}{\\sqrt{3}}$' },
+        { id: 8, type: 'Bài tập', difficulty: 'Dễ', question: 'Tìm $y\'$ của $y = y(x)$ với $xy = 1$:', options: ['$-1/x^2$', '$1/x^2$', '$-1/x$', '$1/x$'], answer: 0, explanation: '$y = 1/x \\Rightarrow y\' = -\\frac{1}{x^2}$' },
+        { id: 9, type: 'Bài tập', difficulty: 'Dễ', question: 'Cho $y(x)$ thỏa mãn $x + \\ln y = 0$. Tính $y\'$:', options: ['$-y$', '$y$', '$-1/y$', '$1/y$'], answer: 0, explanation: 'Đạo hàm: $1 + \\frac{y\'}{y} = 0 \\Rightarrow y\' = -y$' },
+        { id: 10, type: 'Bài tập', difficulty: 'Dễ', question: 'Cho hàm ẩn $y^2 = x^3$. Tìm $y\'$ tại $x=1, y=1$:', options: ['$3/2$', '$2/3$', '$-3/2$', '$-2/3$'], answer: 0, explanation: '$2y\\cdot y\' = 3x^2 \\Rightarrow y\' = \\frac{3x^2}{2y}$. Tại $(1,1)$: $y\' = \\frac{3}{2}$' },
+        { id: 11, type: 'Bài tập', difficulty: 'Trung bình', question: 'Tìm $y\'$ của hàm ẩn $\\tan(x+y) = x$:', options: ['$\\cos^2(x+y) - 1$', '$\\sec^2(x+y) - 1$', '$1 - \\cos^2(x+y)$', '$1 - \\sec^2(x+y)$'], answer: 0, explanation: '$\\sec^2(x+y)(1 + y\') = 1 \\Rightarrow 1 + y\' = \\cos^2(x+y) \\Rightarrow y\' = \\cos^2(x+y) - 1$' },
+        { id: 12, type: 'Bài tập', difficulty: 'Trung bình', question: 'Cho $\\sqrt{x^2 + y^2} = \\arctan(y/x)$. Đạo hàm $y\'$ là:', options: ['$\\frac{x+y}{x-y}$', '$\\frac{x-y}{x+y}$', '$\\frac{y-x}{x+y}$', '$-\\frac{x+y}{x-y}$'], answer: 0, explanation: 'Đạo hàm ngầm dẫn đến $y\' = \\frac{x+y}{x-y}$' },
+        { id: 13, type: 'Bài tập', difficulty: 'Trung bình', question: 'Hàm ẩn $y = y(x)$ bởi $e^y + xy = 1$. Giá trị $y\'(0)$ là:', options: ['$-1$', '$1$', '$0$', '$-e$'], answer: 2, explanation: 'Đạo hàm: $e^y\\cdot y\' + y + x\\cdot y\' = 0$. Tại $x=0$, $e^y = 1 \\Rightarrow y=0$. Thay: $1\\cdot y\' + 0 + 0 = 0 \\Rightarrow y\' = 0$' },
+        { id: 14, type: 'Bài tập', difficulty: 'Trung bình', question: 'Tìm $y\'$ của $\\ln(x^2 + y^2) = \\arctan(y/x)$:', options: ['$\\frac{x+y}{x-y}$', '$\\frac{x-y}{x+y}$', '$\\frac{y-x}{x+y}$', '$-\\frac{x+y}{x-y}$'], answer: 1, explanation: 'Đạo hàm: $\\frac{2x+2y\\cdot y\'}{x^2+y^2} = \\frac{x\\cdot y\' - y}{x^2+y^2} \\Rightarrow 2x+2y\\cdot y\' = x\\cdot y\' - y \\Rightarrow y\' = \\frac{x-y}{x+y}$' },
+        { id: 15, type: 'Bài tập', difficulty: 'Trung bình', question: 'Cho $x^y = y^x$. Tìm $y\'$:', options: ['$\\frac{y(x\\ln y - y)}{x(y\\ln x - x)}$', '$\\frac{x(y\\ln x - x)}{y(x\\ln y - y)}$', '$\\frac{y\\ln y - y}{x\\ln x - x}$', '$\\frac{x\\ln x - x}{y\\ln y - y}$'], answer: 0, explanation: 'Lấy log: $y\\ln x = x\\ln y$. Đạo hàm: $y\'\\ln x + \\frac{y}{x} = \\ln y + \\frac{x}{y}\\cdot y\' \\Rightarrow y\'(\\ln x - \\frac{x}{y}) = \\ln y - \\frac{y}{x} \\Rightarrow y\' = \\frac{y(x\\ln y - y)}{x(y\\ln x - x)}$' },
+        { id: 16, type: 'Bài tập', difficulty: 'Khó', question: 'Hàm ẩn $y(x)$ từ $x^2\\sin y + y^2\\cos x = 1$. Tính $y\'$ tại $(0,1)$:', options: ['$-1/2$', '$1/2$', '$0$', '$1$'], answer: 2, explanation: 'Đạo hàm: $2x\\sin y + x^2\\cos y\\cdot y\' + 2y\\cdot y\'\\cos x - y^2\\sin x = 0$. Tại $(0,1)$: $0 + 0 + 2\\cdot1\\cdot y\'\\cdot1 - 0 = 0 \\Rightarrow 2y\' = 0 \\Rightarrow y\' = 0$' },
+        { id: 17, type: 'Bài tập', difficulty: 'Khó', question: 'Cho $y = y(x)$ thỏa mãn $\\cos(xy) = \\ln(x+y)$. Tìm $y\'$ tại $x=0, y=1$:', options: ['$-2$', '$2$', '$-1$', '$1$'], answer: 2, explanation: 'Đạo hàm: $-\\sin(xy)(y + x\\cdot y\') = \\frac{1 + y\'}{x+y}$. Tại $(0,1)$: $-\\sin(0)(1+0) = 0 = \\frac{1+y\'}{1} \\Rightarrow 1+y\' = 0 \\Rightarrow y\' = -1$' },
+        { id: 18, type: 'Bài tập', difficulty: 'Khó', question: 'Tìm $y\'$ của $\\arctan(y) = \\ln(x^2 + y^2)$ tại điểm $(1,0)$:', options: ['$2$', '$-2$', '$1$', '$-1$'], answer: 0, explanation: 'Đạo hàm: $\\frac{y\'}{1+y^2} = \\frac{2x + 2y\\cdot y\'}{x^2+y^2}$. Tại $(1,0)$: $\\frac{y\'}{1} = \\frac{2 + 0}{1} \\Rightarrow y\' = 2$' },
+        { id: 19, type: 'Bài tập', difficulty: 'Khó', question: 'Cho hàm ẩn $x^3 + y^3 = 3xy$. Tìm $y\'$ tại điểm $(1,1)$:', options: ['$0$', '$-1$', '$1$', '$2$'], answer: 1, explanation: 'Đạo hàm: $3x^2 + 3y^2\\cdot y\' = 3y + 3x\\cdot y\' \\Rightarrow (y^2 - x)y\' = y - x^2$. Tại $(1,1)$: $(1-1)y\' = 1-1 \\Rightarrow 0 = 0$ (dạng vô định). Tính trực tiếp: $y\' = \\frac{2y - x^2}{y^2 - 2x}$ (công thức từ câu 5). Tại $(1,1)$: $y\' = \\frac{2-1}{1-2} = -1$' },
+        { id: 20, type: 'Bài tập', difficulty: 'Khó', question: 'Hàm ẩn $y(x)$ bởi $\\sin(x+y) = x^2 y$. Tìm $y\'$ tại $(0,0)$:', options: ['$0$', '$1$', '$-1$', '$2$'], answer: 2, explanation: 'Đạo hàm: $\\cos(x+y)(1 + y\') = 2xy + x^2\\cdot y\'$. Tại $(0,0)$: $1\\cdot(1 + y\') = 0 \\Rightarrow 1 + y\' = 0 \\Rightarrow y\' = -1$' }
+    ];
+
+    // State
+    let currentIndex = 0;
+    let score = 0;
+    let answeredState = new Array(questionsData.length).fill(false);
+    let selectedAnswer = new Array(questionsData.length).fill(-1);
+    let isCorrectAnswer = new Array(questionsData.length).fill(false);
+
+    const container = document.getElementById('questionContainer');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const scoreDisplay = document.getElementById('scoreDisplay');
+    const progressText = document.getElementById('progressText');
+    const questionStatus = document.getElementById('questionStatus');
+    const dotsContainer = document.getElementById('progressDots');
+
+    function renderDots() {
+        dotsContainer.innerHTML = '';
+        for (let i = 0; i < questionsData.length; i++) {
+            const dot = document.createElement('div');
+            dot.className = 'dot';
+            dot.textContent = i + 1;
+            if (i === currentIndex) dot.classList.add('active');
+            if (answeredState[i]) {
+                if (isCorrectAnswer[i]) {
+                    dot.classList.add('correct-dot');
+                } else {
+                    dot.classList.add('wrong-dot');
+                }
+            }
+            dot.addEventListener('click', () => goToQuestion(i));
+            dotsContainer.appendChild(dot);
+        }
+    }
+
+    function renderQuestion(index) {
+        const q = questionsData[index];
+        const isAnswered = answeredState[index];
+        
+        container.innerHTML = '';
+        const card = document.createElement('div');
+        card.className = 'question-card';
+
+        const header = document.createElement('div');
+        header.className = 'question-header';
+        header.innerHTML = `
+            <span class="q-number">Câu ${index+1}</span>
+            <span class="q-tag">${q.type} • ${q.difficulty}</span>
+        `;
+        card.appendChild(header);
+
+        const qText = document.createElement('div');
+        qText.className = 'q-text';
+        qText.innerHTML = q.question;
+        card.appendChild(qText);
+
+        const optGrid = document.createElement('div');
+        optGrid.className = 'options-grid';
+        const prefixes = ['A', 'B', 'C', 'D'];
+        q.options.forEach((opt, optIdx) => {
+            const optDiv = document.createElement('div');
+            optDiv.className = 'option-item';
+            if (isAnswered) optDiv.classList.add('disabled-opt');
+            if (isAnswered && optIdx === q.answer) optDiv.classList.add('correct');
+            if (isAnswered && optIdx === selectedAnswer[index] && optIdx !== q.answer) optDiv.classList.add('wrong');
+            if (isAnswered && optIdx === selectedAnswer[index] && optIdx === q.answer) optDiv.classList.add('correct');
+            optDiv.dataset.optIndex = optIdx;
+            optDiv.innerHTML = `<span class="option-prefix">${prefixes[optIdx]}.</span> <span>${opt}</span>`;
+            if (!isAnswered) {
+                optDiv.addEventListener('click', () => handleOptionClick(index, optIdx));
+            }
+            optGrid.appendChild(optDiv);
+        });
+        card.appendChild(optGrid);
+
+        const expBox = document.createElement('div');
+        expBox.className = 'explanation-box';
+        if (isAnswered) expBox.classList.add('show');
+        expBox.innerHTML = `<div class="exp-title">💡 Giải thích:</div> <div>${q.explanation}</div>`;
+        card.appendChild(expBox);
+
+        container.appendChild(card);
+
+        // Update status
+        if (isAnswered) {
+            questionStatus.textContent = isCorrectAnswer[index] ? '✅ Đã trả lời đúng' : '❌ Đã trả lời sai';
+            questionStatus.style.color = isCorrectAnswer[index] ? '#1f9d4a' : '#c73a3a';
+        } else {
+            questionStatus.textContent = '⏳ Chưa trả lời';
+            questionStatus.style.color = '#4a6a8a';
+        }
+
+        // Update buttons
+        prevBtn.disabled = index === 0;
+        nextBtn.disabled = index === questionsData.length - 1;
+
+        progressText.textContent = `Câu ${index+1} / ${questionsData.length}`;
+        renderDots();
+
+        // Typeset
+        if (window.MathJax && MathJax.typesetPromise) {
+            MathJax.typesetPromise();
+        }
+    }
+
+    function handleOptionClick(qIdx, optIdx) {
+        if (answeredState[qIdx]) return;
+        
+        const q = questionsData[qIdx];
+        const isCorrect = (optIdx === q.answer);
+        
+        answeredState[qIdx] = true;
+        selectedAnswer[qIdx] = optIdx;
+        isCorrectAnswer[qIdx] = isCorrect;
+        
+        if (isCorrect) score++;
+        updateScore();
+        renderQuestion(currentIndex);
+    }
+
+    function goToQuestion(index) {
+        if (index < 0 || index >= questionsData.length) return;
+        currentIndex = index;
+        renderQuestion(currentIndex);
+    }
+
+    function updateScore() {
+        scoreDisplay.textContent = `✅ ${score} / ${questionsData.length}`;
+    }
+
+    function resetApp() {
+        score = 0;
+        answeredState = new Array(questionsData.length).fill(false);
+        selectedAnswer = new Array(questionsData.length).fill(-1);
+        isCorrectAnswer = new Array(questionsData.length).fill(false);
+        currentIndex = 0;
+        updateScore();
+        renderQuestion(0);
+    }
+
+    // Event listeners
+    prevBtn.addEventListener('click', () => {
+        if (currentIndex > 0) goToQuestion(currentIndex - 1);
+    });
+
+    nextBtn.addEventListener('click', () => {
+        if (currentIndex < questionsData.length - 1) goToQuestion(currentIndex + 1);
+    });
+
+    resetBtn.addEventListener('click', resetApp);
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowLeft' && currentIndex > 0) goToQuestion(currentIndex - 1);
+        if (e.key === 'ArrowRight' && currentIndex < questionsData.length - 1) goToQuestion(currentIndex + 1);
+    });
+
+    // Init
+    renderQuestion(0);
+    updateScore();
+</script>
+</body>
+</html>
